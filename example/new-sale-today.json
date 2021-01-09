@@ -1,0 +1,33 @@
+{
+  "version": "https://jsonfeed.org/version/1.1",
+  "home_page_url": "https://ec.toranoana.jp/tora_r/ec/cot/pages/all/item/standard/arrival/1/",
+  "title": {
+    "selector": "title",
+    "get": "text"
+  },
+  "description": {
+    "selector": "[name=\"description\"]",
+    "get": "@content"
+  },
+  "items": {
+    "selector": [".product-list-item"],
+    "properties": {
+      "id": {
+        "selector": "h3.product-list-title a",
+        "get": "@href"
+      },
+      "url": {
+        "selector": "h3.product-list-title a",
+        "get": "@href"
+      },
+      "title": {
+        "selector": "h3.product-list-title a",
+        "get": "text"
+      },
+      "content_html": {
+        "selector": ":first-child",
+        "get": "html"
+      }
+    }
+  }
+}
