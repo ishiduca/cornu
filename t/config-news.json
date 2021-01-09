@@ -1,0 +1,33 @@
+{
+  "version": "https://jsonfeed.org/version/1.1",
+  "home_page_url": "https://bijutsutecho.com/magazine/news",
+  "title": {
+    "selector": "title",
+    "get": "text"
+  },
+  "description": {
+    "selector": "meta[property=\"og:description\"]",
+    "get": "@content"
+  },
+  "items": {
+    "selector": ["div.magazine__items>div.magazine__item"],
+    "properties": {
+      "id": {
+        "selector": "article > div.main > h3.title > a",
+        "get": "@href"
+      },
+      "url": {
+        "selector": "article > div.main > h3.title > a",
+        "get": "@href"
+      },
+      "title": {
+        "selector": "article > div.main > h3.title > a",
+        "get": "text"
+      },
+      "content_html": {
+        "selector": ">article",
+        "get": "html"
+      }
+    }
+  }
+}
