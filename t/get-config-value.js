@@ -129,13 +129,10 @@ test('', t => {
   var html = path.join(__dirname, 'news.html')
   var config = require('./config-news')
   var expected = require('./expected-news')
-  var c = new Cornu()
-
-  config.items.properties.url.get = (node, done) => {
-    node.getAttribute('href', href => {
-      done(null, String(new URL(href, config.home_page_url)))
-    })
-  }
+  var c = new Cornu({
+    // pluginsPath: './plugins'
+    pluginsPath: path.join(__dirname, './plugins')
+  })
 
   pipe(
     fs.createReadStream(html),

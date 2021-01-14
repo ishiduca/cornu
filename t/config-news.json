@@ -18,7 +18,10 @@
       },
       "url": {
         "selector": "article > div.main > h3.title > a",
-        "get": "@href"
+        "get": "@href",
+        "plugin": [
+          "URI", ["https://bijutsutecho.com/"]
+        ]
       },
       "title": {
         "selector": "article > div.main > h3.title > a",

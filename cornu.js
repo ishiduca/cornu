@@ -1,6 +1,6 @@
+var path = require('path')
 var xtend = require('xtend')
 var trumpet = require('trumpet')
-var { htmlToText: toText } = require('html-to-text')
 var { BufferListStream } = require('bl')
 var { pipe, duplex, through, concat } = require('mississippi')
 
@@ -10,6 +10,7 @@ function Cornu (options) {
   if (!(this instanceof Cornu)) return new Cornu(options)
   options = xtend(options)
 
+  this.toText = options.toText || require('html-to-text').htmlToText
   this.sanitizeHtml = options.sanitizeHtml || require('sanitize-html')
   var allowedTags = this.sanitizeHtml.defaults.allowedTags.concat('img')
   var allowedAttributes = xtend(
@@ -21,7 +22,8 @@ function Cornu (options) {
     xtend(this.sanitizeHtml.defaults, { allowedTags, allowedAttributes })
   )
 
-  this.toText = options.toText || toText
+  this.pluginsPath = null
+  if (options.pluginsPath) this.pluginsPath = options.pluginsPath
 }
 
 Cornu.prototype.createStream = function (config) {
@@ -73,7 +75,7 @@ Cornu.prototype.select = function (config) {
   var snk = trumpet()
   var src = through.obj()
 
-  var { selector, get, properties } = config
+  var { selector, get, properties, plugin } = config
   var node = snk.select(selector)
 
   if (toString(properties) === '[object Object]') {
@@ -83,11 +85,29 @@ Cornu.prototype.select = function (config) {
   } else if (typeof get === 'function') {
     getFunc(node, get).pipe(src)
   } else if (get === 'text') {
-    getText(node, this.toText).pipe(src)
+    if (Array.isArray(plugin)) {
+      getText(node, this.toText)
+        .pipe(plug(this.pluginsPath, plugin[0], plugin[1]))
+        .pipe(src)
+    } else {
+      getText(node, this.toText).pipe(src)
+    }
   } else if (get === 'html') {
-    getHTML(node, this.sanitizeHtml, this.sanitizeHtmlOption).pipe(src)
+    if (Array.isArray(plugin)) {
+      getHTML(node, this.sanitizeHtml, this.sanitizeHtmlOption)
+        .pipe(plug(this.pluginsPath, plugin[0], plugin[1]))
+        .pipe(src)
+    } else {
+      getHTML(node, this.sanitizeHtml, this.sanitizeHtmlOption).pipe(src)
+    }
   } else if (get != null && get.slice(0, 1) === '@') {
-    getAttributeValue(node, get.slice(1)).pipe(src)
+    if (Array.isArray(plugin)) {
+      getAttributeValue(node, get.slice(1))
+        .pipe(plug(this.pluginsPath, plugin[0], plugin[1]))
+        .pipe(src)
+    } else {
+      getAttributeValue(node, get.slice(1)).pipe(src)
+    }
   }
 
   return duplex.obj(snk, src)
@@ -112,7 +132,7 @@ Cornu.prototype.selectAll = function (config) {
     error => error != null && src.emit('error', error)
   )
 
-  var { selector, get, properties } = config
+  var { selector, get, properties, plugin } = config
 
   snk.selectAll(selector, node => {
     if (toString(properties) === '[object Object]') {
@@ -122,16 +142,41 @@ Cornu.prototype.selectAll = function (config) {
     } else if (typeof get === 'function') {
       getFunc(node, get).pipe(mid, { end: false })
     } else if (get === 'text') {
-      getText(node, this.toText).pipe(mid, { end: false })
+      if (Array.isArray(plugin)) {
+        getText(node, this.toText)
+          .pipe(plug(this.pluginsPath, plugin[0], plugin[1]))
+          .pipe(mid, { end: false })
+      } else {
+        getText(node, this.toText).pipe(mid, { end: false })
+      }
     } else if (get === 'html') {
-      getHTML(node, this.sanitizeHtml, this.sanitizeHtmlOption)
-        .pipe(mid, { end: false })
+      if (Array.isArray(plugin)) {
+        getHTML(node, this.sanitizeHtml, this.sanitizeHtmlOption)
+          .pipe(plug(this.pluginsPath, plugin[0], plugin[1]))
+          .pipe(mid, { end: false })
+      } else {
+        getHTML(node, this.sanitizeHtml, this.sanitizeHtmlOption)
+          .pipe(mid, { end: false })
+      }
     } else if (get.slice(0, 1) === '@') {
-      getAttributeValue(node, get.slice(1)).pipe(mid, { end: false })
+      if (Array.isArray(plugin)) {
+        getAttributeValue(node, get.slice(1))
+          .pipe(plug(this.pluginsPath, plugin[0], plugin[1]))
+          .pipe(mid, { end: false })
+      } else {
+        getAttributeValue(node, get.slice(1)).pipe(mid, { end: false })
+      }
     }
   })
 
   return duplex.obj(snk, src)
+}
+
+function plug (dir, mod, args) {
+  var m = require(path.join(dir, mod))
+  return through.obj((v, _, done) => {
+    m.apply(null, [ v ].concat(args).concat(done))
+  })
 }
 
 function getFunc (node, f) {
