@@ -1,0 +1,20 @@
+{
+  "name": "@ishiduca/cornu",
+  "version": "0.0.0",
+  "description": "",
+  "main": "cornu.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://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@github.com/ishiduca/cornu.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/ishiduca/cornu/issues"
+  },
+  "homepage": "https://github.com/ishiduca/cornu#readme"
+}
